@@ -13,9 +13,10 @@ def split_into_commands(line):
         raise RuntimeError(line + ' not understood')
     return iter(commands)
 
-def read_file():
+def read_file(filename=None):
     #filename = rs.OpenFileName("Open", "STL(stereolithography) (*.stl)|*.stl||")
-    filename = rs.OpenFileName("Open", "CarbideMotion (*.nc)|*.nc||")
+    if filename is None:
+        filename = rs.OpenFileName("Open", "CarbideMotion (*.nc)|*.nc||")
     with open(filename, 'r') as f:
         for line in f:
             yield remove_return_carriage(line)
@@ -32,9 +33,9 @@ def get_commands(lines):
             for cmd in split_into_commands(line):
                 yield cmd
 
-def get_coordinates():
+def get_coordinates(lines):
     x,y,z = None, None, None
-    for cmd in get_commands(read_file()): 
+    for cmd in get_commands(lines): 
         if cmd == 'G0':
             # rapid linear movement, no material cutting
             pass
@@ -80,9 +81,11 @@ def get_coordinates():
         else:
             raise RuntimeError('unkown command '+ cmd)
 
+def get_polyline(filename=None):
+    return rs.AddPolyline(list(get_coordinates(read_file(filename))))
+
 def RunCommand(is_interactive):
-    rs.AddPolyline(list(get_coordinates()))
-    print('command ran')
+    get_polyline()
 
 if __name__ == "__main__":
     RunCommand(True)
